@@ -1,6 +1,9 @@
 ![Fig 1.1. Normal Program][img1]
+![Fig 1.2. Patch 1 : ][img2]
+![Fig 1.3. Normal Program][img3]
+![Fig 1.4. Patch 2 : ][img4]
 
-[img1]: ./diagrams/classic1.png
-[img2]: ./diagrams/classic2.png
-[img3]: ./diagrams/classic3.png
-[img4]: ./diagrams/classic4.png
+[img1]: ./1.png
+[img2]: ./2.png
+[img3]: ./3.png
+[img4]: ./4.png
