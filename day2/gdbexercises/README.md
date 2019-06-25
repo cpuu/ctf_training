@@ -1,5 +1,29 @@
 # Show the proof that your patch works!
 
+## Source
+```
+$ cat gdbexercise.c
+#include <stdio.h>
+
+void secret()
+{
+    puts("SECRET!");
+}
+
+void normal()
+{
+    puts("NORMAL");
+}
+
+int main()
+{
+    normal();
+    return 0;
+}
+```
+현 상태는 main 이 normal만을 호출하고 종료되도록 의도된 프로그램임.
+여기에서 secret이 수행되도록 바이너리 패치해보자.
+
 ## Patch Me 1
 ![Fig 1.1. Normal Program][img1]
 
