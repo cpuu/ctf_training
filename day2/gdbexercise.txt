@@ -1,0 +1,26 @@
+gdb ./gdbexercise
+
+pwndbg> b main
+Breakpoint 1 at 0x804844b
+
+pwndbg> disassemble
+
+pwndbg> i r eip
+eip            0x804844b	0x804844b <main+14>
+
+pwndbg> i r eip
+eip            0x8048424	0x8048424 <normal>
+
+
+pwndbg> disassemble secret
+Dump of assembler code for function secret:
+   0x0804840b <+0>:	push   ebp
+
+pwndbg> set $eip=0x0804840b
+
+pwndbg> i r eip
+eip            0x804840b	0x804840b <secret>
+
+pwndbg> continue
+Continuing.
+SECRET!
