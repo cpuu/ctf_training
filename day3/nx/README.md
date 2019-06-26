@@ -6,10 +6,15 @@ system() 의 주소
 ```
 gdb-peda$ p system
 $1 = {<text variable, no debug info>} 0xb7e51b40 <__libc_system>
-gdb-peda$ p exit
-$2 = {<text variable, no debug info>} 0xb7e457f0 <__GI_exit>
+
 gdb-peda$ x/s 0xb7e51b40
 0xb7e51b40 <__libc_system>:	"\203\354\f\213D$\020\350\061h\016"
+```
+exit() 주소
+```
+gdb-peda$ p exit
+$2 = {<text variable, no debug info>} 0xb7e457f0 <__GI_exit>
+
 gdb-peda$ x/s 0xb7e457f0
 0xb7e457f0 <__GI_exit>:	"\350\204+\017"
 ```
