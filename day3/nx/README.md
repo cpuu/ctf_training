@@ -11,6 +11,28 @@ After the function returns, the program will set the instruction pointer to 0xbf
 
 Thus, the attacker's exploit is thwarted.
 
+# Vulnerable Program
+```
+#include <stdio.h>
+#include <string.h>
+
+void exploitme(char* input)
+{
+  char buf[32];
+  strcpy(buf, input);
+  puts(buf);
+}
+
+int main(int argc, char* argv[])
+{
+  if ( argc < 2 ) return -1;
+
+  exploitme(argv[1]);
+
+  return 0;
+}
+```
+
 # Bypassing NX with Ret2Libc
 
 
