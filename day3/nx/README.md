@@ -138,15 +138,17 @@ gdb-peda$ x/s 0xb7e457f0
 ## 종합
 스택에 push된 값들은 역순으로 처리된다는 것을 기억해야 한다. 따라서 system()이 수행되고 난 후의 return addr이 먼저 나온다. 그리고 뒤에 system()의 argument인 /bin/sh가 들어간다. 그렇다면 system("/bin/sh")가 수행되고 난 후의 return addr의 내용을 수행하게 된다.
 
-EIP smash = 32 + 4 = 36
-system() = 0xb7e51b40
-system() return address = BBBB (fake word) or exit() 
-/bin/sh = 0xb7f748c8
+EIP smash = 32 + 4 = 36 \
+system() = 0xb7e51b40 \
+system() return address = BBBB (fake word) or exit() \
+/bin/sh = 0xb7f748c8 \
+
+```
 |---------------------------|-------------------|--------------|---------------|
 | 36 A's                    | 0xb7e51b40        |     BBBB     | 0xb7f748c8    |
 |---------------------------|-------------------|--------------|---------------|
                        args        EBP                 EIP 
-
+```
 현재로써는 대충 fake값인 BBBB로 설정해두었다. 또는 `0xb7e457f0`으로 exit()를 EIP부분에 넣으면 좋다.
 
 ## Exploit code
