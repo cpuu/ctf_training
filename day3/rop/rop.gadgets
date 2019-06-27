@@ -1,0 +1,4 @@
+8048375: pop ebx; ret
+8048542: int 0x80; ret
+8048552: pop eax; pop ecx; ret
+8048580: pop edx ret;
